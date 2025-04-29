@@ -25,7 +25,7 @@ import { Badge } from './UIComponents';
 
 const { width } = Dimensions.get('window');
 
-// Create a Text component that uses the theme
+
 const Text = ({ style, children, ...props }) => {
   return (
     <RNText 

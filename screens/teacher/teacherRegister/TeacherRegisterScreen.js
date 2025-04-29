@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text as RNText, 
@@ -12,7 +12,7 @@ import {
   Image
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, AntDesign } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { createTodoTaskTeacher } from '../../../firestore/create';
@@ -20,11 +20,21 @@ import { auth } from '../../../firebase';
 import { pickImage, uploadToCloudinary } from '../../../utils/cloudinary';
 import theme from '../../../theme';
 import { Button, Heading, Card, Input } from '../../../components/UIComponents';
-import { FlatList } from 'react-native-gesture-handler';
 
 const { width } = Dimensions.get('window');
 
-// Create a Text component that uses the theme
+
+const nepal_districts = {
+  "Province 1": ["Bhojpur", "Dhankuta", "Ilam", "Jhapa", "Khotang", "Morang", "Okhaldhunga", "Panchthar", "Sankhuwasabha", "Solukhumbu", "Sunsari", "Taplejung", "Terhathum", "Udayapur"],
+  "Madhesh Province": ["Bara", "Dhanusha", "Mahottari", "Parsa", "Rautahat", "Saptari", "Sarlahi", "Siraha"],
+  "Bagmati Province": ["Bhaktapur", "Chitwan", "Dhading", "Dolakha", "Kathmandu", "Kavrepalanchok", "Lalitpur", "Makwanpur", "Nuwakot", "Ramechhap", "Rasuwa", "Sindhuli", "Sindhupalchok"],
+  "Gandaki Province": ["Baglung", "Gorkha", "Kaski", "Lamjung", "Manang", "Mustang", "Myagdi", "Nawalpur", "Parbat", "Syangja", "Tanahun"],
+  "Lumbini Province": ["Arghakhanchi", "Banke", "Bardiya", "Dang", "Gulmi", "Kapilvastu", "Nawalparasi", "Palpa", "Pyuthan", "Rolpa", "Rukum (East)", "Rupandehi"],
+  "Karnali Province": ["Dailekh", "Dolpa", "Humla", "Jajarkot", "Jumla", "Kalikot", "Mugu", "Rukum (West)", "Salyan", "Surkhet"],
+  "Sudurpashchim Province": ["Achham", "Baitadi", "Bajhang", "Bajura", "Dadeldhura", "Darchula", "Doti", "Kailali", "Kanchanpur"]
+};
+
+
 const Text = ({ style, color, children, ...props }) => {
   const textColor = color || theme.colors.text;
   return (
@@ -37,20 +47,10 @@ const Text = ({ style, color, children, ...props }) => {
   );
 };
 
-const nepal_districts = {
-  "Province 1": ["Bhojpur", "Dhankuta", "Ilam", "Jhapa", "Khotang", "Morang", "Okhaldhunga", "Panchthar", "Sankhuwasabha", "Solukhumbu", "Sunsari", "Taplejung", "Terhathum", "Udayapur"],
-  "Madhesh Province": ["Bara", "Dhanusha", "Mahottari", "Parsa", "Rautahat", "Saptari", "Sarlahi", "Siraha"],
-  "Bagmati Province": ["Bhaktapur", "Chitwan", "Dhading", "Dolakha", "Kathmandu", "Kavrepalanchok", "Lalitpur", "Makwanpur", "Nuwakot", "Ramechhap", "Rasuwa", "Sindhuli", "Sindhupalchok"],
-  "Gandaki Province": ["Baglung", "Gorkha", "Kaski", "Lamjung", "Manang", "Mustang", "Myagdi", "Nawalpur", "Parbat", "Syangja", "Tanahun"],
-  "Lumbini Province": ["Arghakhanchi", "Banke", "Bardiya", "Dang", "Gulmi", "Kapilvastu", "Nawalparasi", "Palpa", "Pyuthan", "Rolpa", "Rukum (East)", "Rupandehi"],
-  "Karnali Province": ["Dailekh", "Dolpa", "Humla", "Jajarkot", "Jumla", "Kalikot", "Mugu", "Rukum (West)", "Salyan", "Surkhet"],
-  "Sudurpashchim Province": ["Achham", "Baitadi", "Bajhang", "Bajura", "Dadeldhura", "Darchula", "Doti", "Kailali", "Kanchanpur"]
-};
-
 export default function TeacherRegisterScreen({ navigation }) {
-  const [name, setName] = useState('');
-  const [province, setProvince] = useState('');
-  const [district, setDistrict] = useState('');
+  const [name] = useState(auth.currentUser?.displayName || '');
+  const [province, setProvince] = useState(null);
+  const [district, setDistrict] = useState(null);
   const [provinceOpen, setProvinceOpen] = useState(false);
   const [districtOpen, setDistrictOpen] = useState(false);
   const [provinces] = useState(Object.keys(nepal_districts).map(prov => ({
@@ -74,19 +74,27 @@ export default function TeacherRegisterScreen({ navigation }) {
     };
   });
 
-  const handleProvinceChange = (selectedProvince) => {
-    setProvince(selectedProvince);
-    setDistrict('');
-    if (selectedProvince) {
-      const districtOptions = nepal_districts[selectedProvince].map(dist => ({
+ 
+  console.log('nepal_districts keys:', Object.keys(nepal_districts));
+  useEffect(() => {
+    console.log('useEffect triggered - Province:', province);
+    if (province && nepal_districts[province]) {
+      const districtOptions = nepal_districts[province].map(dist => ({
         label: dist,
         value: dist
       }));
+      console.log('Setting districts:', districtOptions);
       setDistricts(districtOptions);
+      if (district && !nepal_districts[province].includes(district)) {
+        console.log('Resetting invalid district:', district);
+        setDistrict(null);
+      }
     } else {
+      console.log('Clearing districts - No valid province');
       setDistricts([]);
+      setDistrict(null);
     }
-  };
+  }, [province]);
 
   const handleImagePick = async () => {
     const uri = await pickImage();
@@ -98,12 +106,14 @@ export default function TeacherRegisterScreen({ navigation }) {
   const validateForm = () => {
     const newErrors = {};
     
-    if (!experience) newErrors.experience = "Experience is required";
-    if (!subject) newErrors.subject = "Subject is required";
-    if (!phoneNumber) newErrors.phoneNumber = "Phone number is required";
+    if (!name.trim()) newErrors.name = "Name is required";
+    if (!experience.trim()) newErrors.experience = "Experience is required";
+    if (!subject.trim()) newErrors.subject = "Subject is required";
+    if (!phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required";
     if (!province) newErrors.province = "Province is required";
     if (!district) newErrors.district = "District is required";
-    
+    if (experience && isNaN(experience)) newErrors.experience = "Experience must be a number";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -121,19 +131,19 @@ export default function TeacherRegisterScreen({ navigation }) {
       }
 
       let photoURL = '';
-      if (photoUri) {
+      if (photoUri && !photoUri.startsWith('http')) {
         photoURL = await uploadToCloudinary(photoUri);
       }
 
       const teacherData = {
-        name: user.displayName,
-        experience,
-        subject,
-        phoneNumber,
+        name: name.trim(),
+        experience: parseInt(experience.trim(), 10),
+        subject: subject.trim(),
+        phoneNumber: phoneNumber.trim(),
         photoURL,
         province,
         district,
-        specificLocation: specificLocation || '',
+        specificLocation: specificLocation.trim() || '',
         userId: user.uid,
         createdAt: new Date(),
       };
@@ -186,15 +196,15 @@ export default function TeacherRegisterScreen({ navigation }) {
       <View style={styles.formSection}>
         <Heading text="Personal Information" size="md" color="textPrimary" style={styles.sectionTitle} />
         
-        {/* <Input
+        <Input
           label="Full Name"
           value={name}
-          onChangeText={setName}
-          placeholder="Enter your full name"
+          editable={false}
+          placeholder="Name from account"
           icon="person-outline"
           error={errors.name}
           style={styles.input}
-        /> */}
+        />
         
         <Input
           label="Phone Number"
@@ -247,15 +257,27 @@ export default function TeacherRegisterScreen({ navigation }) {
             open={provinceOpen}
             value={province}
             items={provinces}
-            setOpen={() => setProvinceOpen(!provinceOpen)}
-            setValue={(val) => setProvince(val)}
+            setOpen={(open) => {
+              console.log('Province dropdown toggled:', open);
+              setProvinceOpen(open);
+            }}
+            setValue={(val) => {
+              console.log('Province selected:', val);
+              setProvince(val);
+            }}
             placeholder="Select province"
             style={styles.dropdown}
-            dropDownContainerStyle={styles.dropdownContainer}
+            dropDownContainerStyle={styles.dropdownContainerStyle}
             placeholderStyle={styles.dropdownPlaceholder}
-            onChangeValue={handleProvinceChange}
-            zIndex={2000}
+            zIndex={10000}
             zIndexInverse={2000}
+            listMode="MODAL"
+            modalProps={{
+              animationType: "slide"
+            }}
+            modalTitle="Select Province"
+            modalContentContainerStyle={styles.modalContentContainer}
+            onOpen={() => console.log('Province dropdown items:', provinces)}
           />
           {errors.province && <Text style={styles.errorText}>{errors.province}</Text>}
         </View>
@@ -266,15 +288,28 @@ export default function TeacherRegisterScreen({ navigation }) {
             open={districtOpen}
             value={district}
             items={districts}
-            setOpen={() => setDistrictOpen(!districtOpen)}
-            setValue={(val) => setDistrict(val)}
+            setOpen={(open) => {
+              console.log('District dropdown toggled:', open);
+              setDistrictOpen(open);
+            }}
+            setValue={(val) => {
+              console.log('District selected:', val);
+              setDistrict(val);
+            }}
             placeholder="Select district"
             style={styles.dropdown}
-            dropDownContainerStyle={styles.dropdownContainer}
+            dropDownContainerStyle={styles.dropdownContainerStyle}
             placeholderStyle={styles.dropdownPlaceholder}
-            disabled={!province}
-            zIndex={1000}
-            zIndexInverse={3000}
+            disabled={districts.length === 0}
+            zIndex={5000}
+            zIndexInverse={2500}
+            listMode="MODAL"
+            modalProps={{
+              animationType: "slide"
+            }}
+            modalTitle="Select District"
+            modalContentContainerStyle={styles.modalContentContainer}
+            onOpen={() => console.log('District dropdown items:', districts)}
           />
           {errors.district && <Text style={styles.errorText}>{errors.district}</Text>}
         </View>
@@ -293,6 +328,8 @@ export default function TeacherRegisterScreen({ navigation }) {
         <Button
           title={uploading ? "Creating..." : "Create Profile"}
           onPress={handleSubmit}
+          onPressIn={onPressIn}
+          onPressOut={onPressOut}
           variant="secondary"
           icon={uploading ? null : "checkmark-circle"}
           loading={uploading}
@@ -303,23 +340,30 @@ export default function TeacherRegisterScreen({ navigation }) {
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
-      <LinearGradient
-        colors={theme.colors.gradient.primary}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradient}
-      >
-        <FlatList
-          data={[1]} // Dummy data since we only need one item
-          renderItem={() => renderForm()}
-          ListHeaderComponent={renderHeader}
-          contentContainerStyle={styles.contentContainer}
-          keyboardShouldPersistTaps="handled"
-        />
-      </LinearGradient>
-    </View>
+    <KeyboardAvoidingView
+      style={styles.keyboardAvoidingView}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <View style={styles.container}>
+        <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+        <LinearGradient
+          colors={theme.colors.gradient.primary}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradient}
+        >
+          <ScrollView
+            contentContainerStyle={styles.contentContainer}
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled={true}
+          >
+            {renderHeader()}
+            {renderForm()}
+          </ScrollView>
+        </LinearGradient>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -334,17 +378,11 @@ const styles = StyleSheet.create({
   keyboardAvoidingView: {
     flex: 1,
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollViewContent: {
-    paddingBottom: 40,
-  },
   backButton: {
     position: 'absolute',
     top: 50,
     left: 20,
-    zIndex: 10,
+    zIndex: 100000,
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -357,12 +395,6 @@ const styles = StyleSheet.create({
     paddingTop: 100,
     paddingBottom: 20,
     paddingHorizontal: theme.spacing.lg,
-  },
-  subHeaderText: {
-    fontSize: theme.typography.fontSize.md,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: theme.spacing.xs,
-    textAlign: 'center',
   },
   formCard: {
     margin: theme.spacing.md,
@@ -393,10 +425,16 @@ const styles = StyleSheet.create({
   dropdownContainer: {
     marginBottom: theme.spacing.md,
   },
+  dropdownContainerStyle: {
+    backgroundColor: '#fff',
+    borderColor: theme.colors.border,
+    marginTop: 2,
+  },
   dropdown: {
     borderColor: theme.colors.border,
     borderRadius: theme.borderRadius.md,
     backgroundColor: '#fff',
+    minHeight: 40,
   },
   dropdownPlaceholder: {
     color: theme.colors.placeholder,
@@ -453,5 +491,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: theme.spacing.xl,
   },
+  modalContentContainer: {
+    backgroundColor: '#fff',
+    padding: 20,
+    maxHeight: '80%',
+  },
 });
-

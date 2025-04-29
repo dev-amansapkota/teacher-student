@@ -72,7 +72,7 @@ const StudentDashboard = ({ navigation }) => {
       console.log('Processed requests:', myRequests);
       setRequests(myRequests);
     } catch (error) {
-      console.error('Error fetching requests:', error);
+      console.error('Error fetching requests:');
       setRequests([]);
     } finally {
       setLoading(false);

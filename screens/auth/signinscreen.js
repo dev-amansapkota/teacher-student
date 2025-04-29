@@ -15,7 +15,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../../firebase';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import theme from '../../theme';
 
 const { width, height } = Dimensions.get('window');
@@ -25,14 +25,19 @@ const SignInScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
-  // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideUpAnim = useRef(new Animated.Value(height * 0.2)).current;
   const inputScale = useRef(new Animated.Value(0.9)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
+    setPersistence(auth, browserLocalPersistence)
+      .then(() => {
+        console.log('Firebase persistence set to LOCAL');
+      })
+      .catch((error) => {
+        console.error('Error setting persistence:', error);
+      });
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -73,29 +78,34 @@ const SignInScreen = ({ navigation }) => {
   };
 
   const onSignInPress = async () => {
+    if (!email.trim() || !password.trim()) {
+      alert('Please enter both email and password');
+      return;
+    }
+
     setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password.trim());
       console.log('User signed in:', userCredential.user.displayName);
       
       if (userCredential && userCredential.user) {
         const displayName = userCredential.user.displayName || 'User';
         try {
-          navigation.navigate('ChooseRole', { 
-            email: email, 
-            name: displayName 
-          });
-        } catch (navError) {
-          console.error('Navigation error:', navError);
           navigation.reset({
             index: 0,
             routes: [{ 
               name: 'ChooseRole', 
               params: { 
-                email: email, 
+                email: email.trim(), 
                 name: displayName 
               } 
             }],
+          });
+        } catch (navError) {
+          console.error('Navigation error:', navError);
+          navigation.navigate('ChooseRole', { 
+            email: email.trim(), 
+            name: displayName 
           });
         }
       }
@@ -103,7 +113,7 @@ const SignInScreen = ({ navigation }) => {
       setEmail('');
       setPassword('');
     } catch (error) {
-      console.log(error);
+      console.error('Sign-in error:', error);
       alert(error.message);
     } finally {
       setLoading(false);
@@ -126,7 +136,7 @@ const SignInScreen = ({ navigation }) => {
         </View>
 
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
         >
           <ScrollView 

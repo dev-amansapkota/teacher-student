@@ -5,15 +5,12 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   Dimensions,
-  ScrollView,
   StatusBar,
-  KeyboardAvoidingView,
-  Platform,
   Image,
-  FlatList
+  ScrollView
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, AntDesign } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { createTodoTask } from '../../../firestore/create';
@@ -24,7 +21,18 @@ import { Button, Heading, Card, Input } from '../../../components/UIComponents';
 
 const { width } = Dimensions.get('window');
 
-// Create a Text component that uses the theme
+
+const nepal_districts = {
+  "Province 1": ["Bhojpur", "Dhankuta", "Ilam", "Jhapa", "Khotang", "Morang", "Okhaldhunga", "Panchthar", "Sankhuwasabha", "Solukhumbu", "Sunsari", "Taplejung", "Terhathum", "Udayapur"],
+  "Madhesh Province": ["Bara", "Dhanusha", "Mahottari", "Parsa", "Rautahat", "Saptari", "Sarlahi", "Siraha"],
+  "Bagmati Province": ["Bhaktapur", "Chitwan", "Dhading", "Dolakha", "Kathmandu", "Kavrepalanchok", "Lalitpur", "Makwanpur", "Nuwakot", "Ramechhap", "Rasuwa", "Sindhuli", "Sindhupalchok"],
+  "Gandaki Province": ["Baglung", "Gorkha", "Kaski", "Lamjung", "Manang", "Mustang", "Myagdi", "Nawalpur", "Parbat", "Syangja", "Tanahun"],
+  "Lumbini Province": ["Arghakhanchi", "Banke", "Bardiya", "Dang", "Gulmi", "Kapilvastu", "Nawalparasi", "Palpa", "Pyuthan", "Rolpa", "Rukum (East)", "Rupandehi"],
+  "Karnali Province": ["Dailekh", "Dolpa", "Humla", "Jajarkot", "Jumla", "Kalikot", "Mugu", "Rukum (West)", "Salyan", "Surkhet"],
+  "Sudurpashchim Province": ["Achham", "Baitadi", "Bajhang", "Bajura", "Dadeldhura", "Darchula", "Doti", "Kailali", "Kanchanpur"]
+};
+
+
 const Text = ({ style, color, children, ...props }) => {
   const textColor = color || theme.colors.text;
   return (
@@ -37,23 +45,14 @@ const Text = ({ style, color, children, ...props }) => {
   );
 };
 
-const nepal_districts = {
-  "Province 1": ["Bhojpur", "Dhankuta", "Ilam", "Jhapa", "Khotang", "Morang", "Okhaldhunga", "Panchthar", "Sankhuwasabha", "Solukhumbu", "Sunsari", "Taplejung", "Terhathum", "Udayapur"],
-  "Madhesh Province": ["Bara", "Dhanusha", "Mahottari", "Parsa", "Rautahat", "Saptari", "Sarlahi", "Siraha"],
-  "Bagmati Province": ["Bhaktapur", "Chitwan", "Dhading", "Dolakha", "Kathmandu", "Kavrepalanchok", "Lalitpur", "Makwanpur", "Nuwakot", "Ramechhap", "Rasuwa", "Sindhuli", "Sindhupalchok"],
-  "Gandaki Province": ["Baglung", "Gorkha", "Kaski", "Lamjung", "Manang", "Mustang", "Myagdi", "Nawalpur", "Parbat", "Syangja", "Tanahun"],
-  "Lumbini Province": ["Arghakhanchi", "Banke", "Bardiya", "Dang", "Gulmi", "Kapilvastu", "Nawalparasi", "Palpa", "Pyuthan", "Rolpa", "Rukum (East)", "Rupandehi"],
-  "Karnali Province": ["Dailekh", "Dolpa", "Humla", "Jajarkot", "Jumla", "Kalikot", "Mugu", "Rukum (West)", "Salyan", "Surkhet"],
-  "Sudurpashchim Province": ["Achham", "Baitadi", "Bajhang", "Bajura", "Dadeldhura", "Darchula", "Doti", "Kailali", "Kanchanpur"]
-};
-
 function StudentRegisterScreen({ navigation, route }) {
   const studentData = route.params?.studentData;
   const isEditing = !!studentData;
 
+
   const [name, setName] = useState(studentData?.name || '');
-  const [province, setProvince] = useState(studentData?.province || '');
-  const [district, setDistrict] = useState(studentData?.district || '');
+  const [province, setProvince] = useState(studentData?.province || null);
+  const [district, setDistrict] = useState(studentData?.district || null);
   const [provinceOpen, setProvinceOpen] = useState(false);
   const [districtOpen, setDistrictOpen] = useState(false);
   const [provinces] = useState(Object.keys(nepal_districts).map(prov => ({
@@ -65,7 +64,7 @@ function StudentRegisterScreen({ navigation, route }) {
   const [grade, setGrade] = useState(studentData?.grade || '');
   const [subject, setSubject] = useState(studentData?.subject || '');
   const [phoneNumber, setPhoneNumber] = useState(studentData?.phoneNumber || '');
-  const [photoUri, setPhotoUri] = useState(null);
+  const [photoUri, setPhotoUri] = useState(studentData?.photoURL || null);
   const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState({});
   const [salary, setSalary] = useState(studentData?.salary || '');
@@ -79,29 +78,37 @@ function StudentRegisterScreen({ navigation, route }) {
     };
   });
 
-  useEffect(() => {
-    if (province) {
-      const districtOptions = nepal_districts[province].map(dist => ({
-        label: dist,
-        value: dist
-      }));
-      setDistricts(districtOptions);
-    }
-  }, [province]);
+ 
+  console.log('nepal_districts keys:', Object.keys(nepal_districts));
 
-  const handleProvinceChange = (selectedProvince) => {
-    setProvince(selectedProvince);
-    setDistrict('');
-    if (selectedProvince) {
+
+  useEffect(() => {
+    console.log('useEffect triggered - Province:', province, 'isEditing:', isEditing);
+    let selectedProvince = province;
+    
+
+    if (isEditing && !province && studentData?.province) {
+      selectedProvince = studentData.province;
+      setProvince(selectedProvince);
+    }
+
+    if (selectedProvince && nepal_districts[selectedProvince]) {
       const districtOptions = nepal_districts[selectedProvince].map(dist => ({
         label: dist,
         value: dist
       }));
+      console.log('Setting districts:', districtOptions);
       setDistricts(districtOptions);
+      if (district && !nepal_districts[selectedProvince].includes(district)) {
+        console.log('Resetting invalid district:', district);
+        setDistrict(null);
+      }
     } else {
+      console.log('Clearing districts - No valid province');
       setDistricts([]);
+      setDistrict(null);
     }
-  };
+  }, [province, isEditing, studentData]);
 
   const handleImagePick = async () => {
     const uri = await pickImage();
@@ -113,13 +120,15 @@ function StudentRegisterScreen({ navigation, route }) {
   const validateForm = () => {
     const newErrors = {};
     
-    if (!name) newErrors.name = "Name is required";
-    if (!grade) newErrors.grade = "Grade is required";
-    if (!subject) newErrors.subject = "Subject is required";
-    if (!phoneNumber) newErrors.phoneNumber = "Phone number is required";
+    if (!name.trim()) newErrors.name = "Name is required";
+    if (!grade.trim()) newErrors.grade = "Grade is required";
+    if (!subject.trim()) newErrors.subject = "Subject is required";
+    if (!phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required";
     if (!province) newErrors.province = "Province is required";
     if (!district) newErrors.district = "District is required";
-    
+    if (salary && isNaN(salary)) newErrors.salary = "Salary must be a number";
+    if (teachingHours && isNaN(teachingHours)) newErrors.teachingHours = "Teaching hours must be a number";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -136,24 +145,24 @@ function StudentRegisterScreen({ navigation, route }) {
         return;
       }
 
-      let photoURL = '';
-      if (photoUri) {
+      let photoURL = photoUri;
+      if (photoUri && !photoUri.startsWith('http')) {
         photoURL = await uploadToCloudinary(photoUri);
       } else if (studentData?.photoURL) {
         photoURL = studentData.photoURL;
       }
 
       const studentProfileData = {
-        name,
-        grade,
-        subject,
-        phoneNumber,
-        photoURL,
+        name: name.trim(),
+        grade: grade.trim(),
+        subject: subject.trim(),
+        phoneNumber: phoneNumber.trim(),
+        photoURL: photoURL || '',
         province,
         district,
-        specificLocation: specificLocation || '',
-        salary,
-        teachingHours,
+        specificLocation: specificLocation.trim(),
+        salary: salary ? parseFloat(salary) : null,
+        teachingHours: teachingHours ? parseInt(teachingHours) : null,
         userId: user.uid,
         createdAt: new Date(),
       };
@@ -164,7 +173,7 @@ function StudentRegisterScreen({ navigation, route }) {
       navigation.navigate('StudentDashboard');
     } catch (error) {
       setUploading(false);
-      alert(`Error ${isEditing ? 'updating' : 'creating'} student profile: ` + error.message);
+      alert(`Error ${isEditing ? 'updating' : 'creating'} student profile: ${error.message}`);
     }
   };
 
@@ -180,8 +189,6 @@ function StudentRegisterScreen({ navigation, route }) {
     <TouchableOpacity style={styles.photoUploadContainer} onPress={handleImagePick}>
       {photoUri ? (
         <Image source={{ uri: photoUri }} style={styles.photoPreview} />
-      ) : studentData?.photoURL ? (
-        <Image source={{ uri: studentData.photoURL }} style={styles.photoPreview} />
       ) : (
         <View style={styles.photoPlaceholder}>
           <Ionicons name="camera" size={30} color={theme.colors.primary} />
@@ -259,7 +266,7 @@ function StudentRegisterScreen({ navigation, route }) {
         />
 
         <Input
-          label="Salary to Provide (NPR)"
+          label="Salary to Provide (NPR, Optional)"
           value={salary}
           onChangeText={setSalary}
           placeholder="Enter amount to give"
@@ -270,7 +277,7 @@ function StudentRegisterScreen({ navigation, route }) {
         />
 
         <Input
-          label="Teaching Hours per Week"
+          label="Teaching Hours per Week (Optional)"
           value={teachingHours}
           onChangeText={setTeachingHours}
           placeholder="Enter hours per week"
@@ -290,15 +297,20 @@ function StudentRegisterScreen({ navigation, route }) {
             open={provinceOpen}
             value={province}
             items={provinces}
-            setOpen={() => setProvinceOpen(!provinceOpen)}
-            setValue={(val) => setProvince(val)}
+            setOpen={(open) => {
+              console.log('Province dropdown toggled:', open);
+              setProvinceOpen(open);
+            }}
+            setValue={(val) => {
+              console.log('Province selected:', val);
+              setProvince(val);
+            }}
             placeholder="Select province"
             style={styles.dropdown}
             dropDownContainerStyle={styles.dropdownContainerStyle}
             placeholderStyle={styles.dropdownPlaceholder}
-            onChangeValue={handleProvinceChange}
-            zIndex={3000}
-            zIndexInverse={1000}
+            zIndex={10000}
+            zIndexInverse={2000}
             listMode="MODAL"
             modalProps={{
               animationType: "slide"
@@ -315,21 +327,27 @@ function StudentRegisterScreen({ navigation, route }) {
             open={districtOpen}
             value={district}
             items={districts}
-            setOpen={() => setDistrictOpen(!districtOpen)}
-            setValue={(val) => setDistrict(val)}
+            setOpen={(open) => {
+              console.log('District dropdown toggled:', open);
+              setDistrictOpen(open);
+            }}
+            setValue={(val) => {
+              console.log('District selected:', val);
+              setDistrict(val);
+            }}
             placeholder="Select district"
             style={styles.dropdown}
             dropDownContainerStyle={styles.dropdownContainerStyle}
             placeholderStyle={styles.dropdownPlaceholder}
-            disabled={!province}
-            zIndex={2000}
-            zIndexInverse={2000}
+            zIndex={5000}
+            zIndexInverse={2500}
             listMode="MODAL"
             modalProps={{
               animationType: "slide"
             }}
             modalTitle="Select District"
             modalContentContainerStyle={styles.modalContentContainer}
+            disabled={districts.length === 0}
           />
           {errors.district && <Text style={styles.errorText}>{errors.district}</Text>}
         </View>
@@ -348,6 +366,8 @@ function StudentRegisterScreen({ navigation, route }) {
         <Button
           title={uploading ? (isEditing ? "Updating..." : "Creating...") : (isEditing ? "Update Profile" : "Create Profile")}
           onPress={handleSubmit}
+          onPressIn={onPressIn}
+          onPressOut={onPressOut}
           variant="primary"
           icon={uploading ? null : "checkmark-circle"}
           loading={uploading}
@@ -366,13 +386,14 @@ function StudentRegisterScreen({ navigation, route }) {
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
-        <FlatList
-          data={[1]} // Dummy data since we only need one item
-          renderItem={() => renderForm()}
-          ListHeaderComponent={renderHeader}
+        <ScrollView
           contentContainerStyle={styles.contentContainer}
           keyboardShouldPersistTaps="handled"
-        />
+          nestedScrollEnabled={true}
+        >
+          {renderHeader()}
+          {renderForm()}
+        </ScrollView>
       </LinearGradient>
     </View>
   );
@@ -386,20 +407,11 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollViewContent: {
-    paddingBottom: 40,
-  },
   backButton: {
     position: 'absolute',
     top: 50,
     left: 20,
-    zIndex: 10,
+    zIndex: 100000,
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -412,12 +424,6 @@ const styles = StyleSheet.create({
     paddingTop: 100,
     paddingBottom: 20,
     paddingHorizontal: theme.spacing.lg,
-  },
-  subHeaderText: {
-    fontSize: theme.typography.fontSize.md,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: theme.spacing.xs,
-    textAlign: 'center',
   },
   formCard: {
     margin: theme.spacing.md,
@@ -447,7 +453,6 @@ const styles = StyleSheet.create({
   },
   dropdownContainer: {
     marginBottom: theme.spacing.md,
-    zIndex: 1,
   },
   dropdownContainerStyle: {
     backgroundColor: '#fff',
@@ -523,4 +528,3 @@ const styles = StyleSheet.create({
 });
 
 export default StudentRegisterScreen;
-

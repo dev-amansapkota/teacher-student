@@ -22,7 +22,6 @@ import StudentCard from '../../../components/StudentCard';
 const { width, height } = Dimensions.get('window');
 const user = auth.currentUser;
 
-// Create a Text component that uses the theme
 const Text = ({ style, color, children, ...props }) => {
   const textColor = color || theme.colors.text;
   return (
@@ -51,7 +50,7 @@ export default function StudentsRequest({ navigation }) {
     const myTodos = result.docs.map((d) => ({ docId: d.id, ...d.data() }));
     setData(myTodos);
     
-    // Extract unique locations
+   
     const locations = [...new Set(myTodos.map(item => item.district))].filter(Boolean);
     setAvailableLocations(locations);
     
@@ -108,7 +107,7 @@ export default function StudentsRequest({ navigation }) {
     setDistrict('');
   };
 
-  // Create animated styles
+
   const headerTranslateY = useAnimatedStyle(() => {
     return {
       transform: [{ 
@@ -287,7 +286,6 @@ export default function StudentsRequest({ navigation }) {
                 <Text style={styles.loadingText}>Finding students...</Text>
               </View>
             ) : filteredData.length > 0 ? (
-              // Student Cards
               
               filteredData.map((e) => (
                 <StudentCard
@@ -306,7 +304,6 @@ export default function StudentsRequest({ navigation }) {
                 />
               ))
             ) : (
-              // No Results
               <Card style={styles.noResultsCard}>
                 <View style={styles.noResultsContent}>
                   <Ionicons name="search" size={48} color={theme.colors.textSecondary} />

@@ -25,7 +25,6 @@ const { width, height } = Dimensions.get('window');
 const Stack = createStackNavigator();
 const user = auth.currentUser;
 
-// Create a Text component that uses the theme
 const Text = ({ style, color, children, ...props }) => {
   const textColor = color || theme.colors.text;
   return (
@@ -54,7 +53,6 @@ const TeacherListScreen = ({ navigation }) => {
     const myTodos = result.docs.map((d) => ({ docId: d.id, ...d.data() }));
     setData(myTodos);
     
-    // Extract unique locations
     const locations = [...new Set(myTodos.map(item => item.district))].filter(Boolean);
     setAvailableLocations(locations);
     
@@ -111,7 +109,6 @@ const TeacherListScreen = ({ navigation }) => {
     setDistrict('');
   };
 
-  // Create animated styles
   const headerTranslateY = useAnimatedStyle(() => {
     return {
       transform: [{ 
@@ -282,7 +279,6 @@ const TeacherListScreen = ({ navigation }) => {
               <Text style={styles.loadingText}>Finding teachers...</Text>
             </View>
           ) : filteredData.length > 0 ? (
-            // Teacher Cards
             filteredData.map((e) => (
               <TeacherCard
                 key={e.docId}
@@ -298,7 +294,7 @@ const TeacherListScreen = ({ navigation }) => {
               />
             ))
           ) : (
-            // No Results
+
             <Card style={styles.noResultsCard}>
               <View style={styles.noResultsContent}>
                 <Ionicons name="search" size={48} color={theme.colors.textSecondary} />

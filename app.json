@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "ankitproject2",
-    "slug": "ankitproject2",
-    "version": "1.0.0",
+    "name": "Ghar Study",
+    "slug": "ankitproject",
+    "version": "2.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -16,14 +16,16 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.guptaankit9.ankitproject"
+      "bundleIdentifier": "com.gharstudy.ankit",
+      "buildNumber": "2"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.guptaankit9.ankitproject"
+      "package": "com.gharstudy.ankit",
+      "versionCode": 2
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -42,4 +44,3 @@
     "newArchEnabled": true
   }
 }
-

@@ -1,18 +1,5 @@
 /**
  * UIComponents.js - Reusable UI Components Library
- * 
- * This file contains a collection of reusable UI components used throughout the application:
- * - Button: Customizable button with different variants and sizes
- * - Card: Container component for content display
- * - Input: Form input component with validation
- * - Badge: Small status indicator
- * - Heading: Text component with different sizes and styles
- * 
- * Features:
- * - Theme integration
- * - Consistent styling
- * - Accessibility support
- * - Responsive design
  */
 
 import React from 'react';
@@ -22,12 +9,12 @@ import { Ionicons } from '@expo/vector-icons';
 import theme from '../theme';
 
 // Button Component
-export const Button = ({ 
-  title, 
-  onPress, 
-  variant = 'primary', 
-  size = 'medium', 
-  icon, 
+export const Button = ({
+  title,
+  onPress,
+  variant = 'primary',
+  size = 'medium',
+  icon,
   disabled = false,
   fullWidth = false,
   style,
@@ -35,42 +22,33 @@ export const Button = ({
 }) => {
   const getColors = () => {
     switch (variant) {
-      case 'primary':
-        return theme.colors.gradient.primary;
-      case 'secondary':
-        return theme.colors.gradient.secondary;
-      case 'outline':
-        return ['transparent', 'transparent'];
-      case 'ghost':
-        return ['transparent', 'transparent'];
-      default:
-        return theme.colors.gradient.primary;
+      case 'primary': return theme.colors.gradient.primary;
+      case 'secondary': return theme.colors.gradient.secondary;
+      case 'outline': return ['transparent', 'transparent'];
+      case 'ghost': return ['transparent', 'transparent'];
+      default: return theme.colors.gradient.primary;
     }
   };
 
   const getSize = () => {
     switch (size) {
-      case 'small':
-        return { paddingVertical: 8, paddingHorizontal: 16, fontSize: theme.typography.fontSize.sm };
-      case 'medium':
-        return { paddingVertical: 12, paddingHorizontal: 24, fontSize: theme.typography.fontSize.md };
-      case 'large':
-        return { paddingVertical: 16, paddingHorizontal: 32, fontSize: theme.typography.fontSize.lg };
-      default:
-        return { paddingVertical: 12, paddingHorizontal: 24, fontSize: theme.typography.fontSize.md };
+      case 'small': return { paddingVertical: 8, paddingHorizontal: 16, fontSize: theme.typography.fontSize.sm };
+      case 'medium': return { paddingVertical: 12, paddingHorizontal: 24, fontSize: theme.typography.fontSize.md };
+      case 'large': return { paddingVertical: 16, paddingHorizontal: 32, fontSize: theme.typography.fontSize.lg };
+      default: return { paddingVertical: 12, paddingHorizontal: 24, fontSize: theme.typography.fontSize.md };
     }
   };
 
   const buttonSize = getSize();
   const isOutline = variant === 'outline';
   const isGhost = variant === 'ghost';
-  const textColor = isOutline || isGhost 
+  const textColor = (isOutline || isGhost)
     ? variant === 'secondary' ? theme.colors.secondary : theme.colors.primary
     : '#ffffff';
 
   return (
-    <TouchableOpacity 
-      onPress={onPress} 
+    <TouchableOpacity
+      onPress={onPress}
       disabled={disabled || loading}
       style={[
         styles.buttonContainer,
@@ -85,11 +63,11 @@ export const Button = ({
         end={{ x: 1, y: 0 }}
         style={[
           styles.button,
-          { 
-            paddingVertical: buttonSize.paddingVertical, 
+          {
+            paddingVertical: buttonSize.paddingVertical,
             paddingHorizontal: buttonSize.paddingHorizontal,
             borderWidth: isOutline ? 1 : 0,
-            borderColor: isOutline 
+            borderColor: isOutline
               ? variant === 'secondary' ? theme.colors.secondary : theme.colors.primary
               : 'transparent',
             opacity: disabled ? 0.6 : 1,
@@ -102,23 +80,21 @@ export const Button = ({
         ) : (
           <View style={styles.buttonContent}>
             {icon && (
-              <Ionicons 
-                name={icon} 
-                size={buttonSize.fontSize + 4} 
-                color={textColor} 
-                style={styles.buttonIcon} 
+              <Ionicons
+                name={icon}
+                size={buttonSize.fontSize + 4}
+                color={textColor}
+                style={styles.buttonIcon}
               />
             )}
-            <Text 
-              style={[
-                styles.buttonText, 
-                { 
-                  fontSize: buttonSize.fontSize,
-                  color: textColor,
-                  fontFamily: theme.typography.fontFamily.semiBold
-                }
-              ]}
-            >
+            <Text style={[
+              styles.buttonText,
+              {
+                fontSize: buttonSize.fontSize,
+                color: textColor,
+                fontFamily: theme.typography.fontFamily.semiBold
+              }
+            ]}>
               {title}
             </Text>
           </View>
@@ -131,10 +107,10 @@ export const Button = ({
 // Card Component
 export const Card = ({ children, style, onPress }) => {
   const CardComponent = onPress ? TouchableOpacity : View;
-  
+
   return (
-    <CardComponent 
-      style={[styles.card, style]} 
+    <CardComponent
+      style={[styles.card, style]}
       onPress={onPress}
       activeOpacity={onPress ? 0.95 : 1}
     >
@@ -149,16 +125,16 @@ export const Card = ({ children, style, onPress }) => {
 };
 
 // Input Component
-export const Input = ({ 
-  label, 
-  value, 
-  onChangeText, 
-  placeholder, 
-  secureTextEntry, 
-  error, 
+export const Input = ({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  secureTextEntry,
+  error,
   icon,
   style,
-  ...props 
+  ...props
 }) => {
   return (
     <View style={[styles.inputContainer, style]}>
@@ -168,11 +144,11 @@ export const Input = ({
         error && styles.inputError
       ]}>
         {icon && (
-          <Ionicons 
-            name={icon} 
-            size={20} 
-            color={theme.colors.textSecondary} 
-            style={styles.inputIcon} 
+          <Ionicons
+            name={icon}
+            size={20}
+            color={theme.colors.textSecondary}
+            style={styles.inputIcon}
           />
         )}
         <TextInput
@@ -190,7 +166,7 @@ export const Input = ({
   );
 };
 
-// Badge Component
+// Badge Component (FIXED)
 export const Badge = ({ text, color = 'primary', icon, style }) => {
   const getColor = () => {
     switch (color) {
@@ -205,19 +181,19 @@ export const Badge = ({ text, color = 'primary', icon, style }) => {
   };
 
   const badgeColor = getColor();
-  
+
   return (
     <View style={[
       styles.badge,
-      { backgroundColor: `${badgeColor}20` },
+      { backgroundColor: `${badgeColor}30` }, // Slightly darker background for better contrast
       style
     ]}>
       {icon && (
-        <Ionicons 
-          name={icon} 
-          size={14} 
-          color={badgeColor} 
-          style={styles.badgeIcon} 
+        <Ionicons
+          name={icon}
+          size={16}
+          color={badgeColor}
+          style={styles.badgeIcon}
         />
       )}
       <Text style={[
@@ -234,12 +210,12 @@ export const Badge = ({ text, color = 'primary', icon, style }) => {
 export const Heading = ({ text, size = 'lg', color = 'text', style }) => {
   const getFontSize = () => {
     switch (size) {
-      case 'xs': return theme.typography.fontSize.md;
-      case 'sm': return theme.typography.fontSize.lg;
-      case 'md': return theme.typography.fontSize.xl;
-      case 'lg': return theme.typography.fontSize.xxl;
-      case 'xl': return theme.typography.fontSize.xxxl;
-      default: return theme.typography.fontSize.xxl;
+      case 'xs': return theme.typography.fontSize.sm;
+      case 'sm': return theme.typography.fontSize.md;
+      case 'md': return theme.typography.fontSize.lg;
+      case 'lg': return theme.typography.fontSize.xl;
+      case 'xl': return theme.typography.fontSize.xxl;
+      default: return theme.typography.fontSize.xl;
     }
   };
 
@@ -256,7 +232,7 @@ export const Heading = ({ text, size = 'lg', color = 'text', style }) => {
   return (
     <Text style={[
       styles.heading,
-      { 
+      {
         fontSize: getFontSize(),
         color: getColor(),
       },
@@ -267,8 +243,8 @@ export const Heading = ({ text, size = 'lg', color = 'text', style }) => {
   );
 };
 
+// Styles
 const styles = StyleSheet.create({
-  // Button styles
   buttonContainer: {
     borderRadius: theme.borderRadius.md,
     overflow: 'hidden',
@@ -293,8 +269,7 @@ const styles = StyleSheet.create({
   fullWidth: {
     width: '100%',
   },
-  
-  // Card styles
+
   card: {
     borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
@@ -305,8 +280,7 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
     borderRadius: theme.borderRadius.lg,
   },
-  
-  // Input styles
+
   inputContainer: {
     marginBottom: theme.spacing.md,
   },
@@ -344,26 +318,26 @@ const styles = StyleSheet.create({
     color: theme.colors.error,
     marginTop: theme.spacing.xs,
   },
-  
-  // Badge styles
+
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-start',
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.xs,
     borderRadius: theme.borderRadius.round,
+    backgroundColor: '#eee',
   },
   badgeIcon: {
     marginRight: 4,
   },
   badgeText: {
-    fontSize: theme.typography.fontSize.xs,
+    fontSize: theme.typography.fontSize.sm,
     fontFamily: theme.typography.fontFamily.medium,
   },
-  
-  // Heading styles
+
   heading: {
     fontFamily: theme.typography.fontFamily.bold,
     marginBottom: theme.spacing.sm,
   },
-}); 
+});
